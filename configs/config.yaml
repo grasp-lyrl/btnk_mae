@@ -1,0 +1,45 @@
+# configs/config.yaml
+defaults:
+  - train_cfg: finetune
+  - _self_
+  - override hydra/job_logging: disabled
+  - override hydra/hydra_logging: disabled
+
+# W&B settings
+wandb_project:    btnk_mae
+run_name:         null  # If not set will fallback to YYYYMMDD_HHMMSS string.
+
+# Prevents hydra from creating a subdirectory to save the config.
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false
+
+
+# Data settings:
+data:
+  dataset:     imagenet-1k
+  pin_mem:     false
+
+
+# model settings:
+model:
+  type: btnk_mae
+  model_size: huge
+  act_fn: relu
+
+
+# Distributed settings:
+distributed:
+  dist_on_itp: false
+  dist_url: "env://"
+  world_size: 1
+  local_rank: -1
+  gpu: 0
+  rank: 0
+
+
+# GLOBAL DEFAULTS
+seed:   0
