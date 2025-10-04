@@ -1,4 +1,4 @@
-# configs/finetune.yaml
+# configs/habitat_pano.yaml
 defaults:
   - _self_
   - override hydra/job_logging: disabled
@@ -8,7 +8,7 @@ defaults:
 # Training settings
 train_cfg:
   # Resume from a checkpoint
-  resume: "ckpts/tune_upscaler_encdec/checkpoint-latest.pth"  # If not set will not resume from a checkpoint.
+  resume: "ckpts/large_gan/checkpoint-latest.pth"  # If not set will not resume from a checkpoint.
   resume_optimizer: true  # Recommend to use a new optimizer if you are loading a checkpoint saved during training mode.
   
   # Training settings
@@ -20,14 +20,13 @@ train_cfg:
   pin_mem: false
   weight_decay: 0.05
   lr: null  # will be computed automatically if not set
-  blr: 1e-3  # base learning rate
-  min_lr: 1e-4  # minimum learning rate
+  blr: 1e-4  # base learning rate
+  min_lr: 1e-5  # minimum learning rate
   start_epoch: 0  # start epoch
 
   # Loss coefficients
   full_mae_loss_coeff: 1
   btnk_mae_loss_coeff: 1
-
 
 # W&B settings
 wandb_project:    btnk_mae
@@ -43,7 +42,7 @@ hydra:
 
 # Data settings:
 data:
-  dataset:     imagenet-1k
+  dataset:     /home/zhaoze/datasets/cogsim/hssd_hab/103997643_171030747/pano_254x314_1024x512
   pin_mem:     false
 
 # model settings:

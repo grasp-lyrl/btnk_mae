@@ -5,8 +5,7 @@ from typing import Optional
 from functools import partial
 from btnk_mae.utils.patchify import patchify
 from .mae_encoder import MAEEncoder
-from transformers import PreTrainedModel
-from btnk_mae.utils.pos_embed import get_2d_sincos_pos_embed
+from btnk_mae.utils.pos_embed import get_2d_sincos_pos_embed, interpolate_pos_embed
 
 
 COMMON_CFG = {
@@ -68,6 +67,48 @@ class BtnkMAEEncoder(nn.Module):
         # ------------------------------------------------
         # Weight initialization
         self.initialize_weights()
+
+    def set_img_size(self, img_size: int):
+        """
+        Set the image size for the encoder.
+        """
+        if img_size == self.img_size: 
+            return
+
+        assert isinstance(img_size, int), "Image size must be an integer"
+        assert img_size % self.patch_size == 0, "Image size must be divisible by patch size"
+
+        # Record the original settings
+        device, dtype = self.pos_embed.device, self.pos_embed.dtype
+        requires_grad = self.pos_embed.requires_grad
+
+        # Set the image size
+        self.img_size = img_size
+        self.mae_encoder.patch_embed.set_input_size(img_size)
+        new_num_patches = self.mae_encoder.num_patches
+        
+        # If the pos_embed does not require_grad, use direct sin-cos computation
+        if not requires_grad:
+            _pos_embed = get_2d_sincos_pos_embed(
+                embed_dim=self.embed_dim,
+                grid_size=int(self.mae_encoder.num_patches**0.5),
+                cls_token=True
+            )
+            self.pos_embed = nn.Parameter(
+                torch.from_numpy(_pos_embed).float().unsqueeze(0).to(device=device, dtype=dtype),
+                requires_grad=False
+            )
+
+        # If the pos_embed requires_grad, use interpolation
+        else:
+            new_pos_embed = nn.Parameter(
+                torch.zeros(1, self.mae_encoder.num_patches + 1, self.embed_dim),
+                requires_grad=False
+            )
+            interp_pos_embed = interpolate_pos_embed(self.pos_embed, new_pos_embed, new_num_patches)
+            if interp_pos_embed is not None:
+                interp_pos_embed = interp_pos_embed.to(device=device, dtype=dtype)
+                self.pos_embed = nn.Parameter(interp_pos_embed, requires_grad=True)
 
     def load_pretrained(self):
         """

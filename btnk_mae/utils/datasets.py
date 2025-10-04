@@ -69,12 +69,10 @@ class PanoramaDataset(CustomDataset):
             path = self.image_paths[idx]
             try:
                 image = PIL.Image.open(path).convert("RGB")
-                image_512 = image.resize((512, 512), PIL.Image.BICUBIC)
-                image_224 = image_512.resize((224, 224), PIL.Image.BICUBIC)
+                image = image.resize((512, 512), PIL.Image.BICUBIC)
                 if self.transform:
-                    image_512 = self.transform(image_512)
-                    image_224 = self.transform(image_224)
-                return image_224, image_512
+                    image = self.transform(image)
+                return image, -1
             except Exception as e:
                 print(f"Warning: Skipping corrupt image {path} — {e}")
                 idx += 1

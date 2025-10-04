@@ -1,19 +1,18 @@
-# custom ignore
-_archive/
-scripts/test_temp/
-.DS_Store
+# Custom
+*archive*
 *debug*
-*.npz
-*.pkl
-*.pth
-data/
-output_bottleneck/
-*log*
-*ckpt/
-*ckpts/
-wandb/
 logs/
 extracted_features/
+notes.md
+
+# Project specific
+ckpts/
+wandb/
+data/
+*.pkl
+*.pth
+*.npz
+.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

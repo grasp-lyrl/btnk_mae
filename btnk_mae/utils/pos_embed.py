@@ -72,7 +72,7 @@ def get_1d_sincos_pos_embed_from_grid(embed_dim, pos):
 # References:
 # DeiT: https://github.com/facebookresearch/deit
 # --------------------------------------------------------
-def interpolate_pos_embed(model, checkpoint_model):
+def _interpolate_pos_embed(model, checkpoint_model):
     if 'pos_embed' in checkpoint_model:
         pos_embed_checkpoint = checkpoint_model['pos_embed']
         embedding_size = pos_embed_checkpoint.shape[-1]
@@ -94,3 +94,41 @@ def interpolate_pos_embed(model, checkpoint_model):
             pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
             new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
             checkpoint_model['pos_embed'] = new_pos_embed
+
+def interpolate_pos_embed(old_pos_embed, new_pos_embed, new_num_patches):
+    """
+    Interpolate the position embeddings for a new number of patches. Modified from DeiT.
+
+    References:
+    DeiT: https://github.com/facebookresearch/deit
+
+    Args:
+        old_pos_embed: old position embeddings
+        new_pos_embed: new position embeddings
+        new_num_patches: number of patches for the new model
+    """
+    embedding_size = old_pos_embed.shape[-1]
+    num_extra_tokens = new_pos_embed.shape[-2] - new_num_patches  # Extra tokens (CLS etc.)
+
+    # Get W == H == sqrt(old_num_patches/new_num_patches)
+    # Assume extra tokens never changed
+    orig_size = int((old_pos_embed.shape[-2] - num_extra_tokens) ** 0.5)
+    new_size = int(new_num_patches ** 0.5)
+
+    if orig_size != new_size:
+        print("Position interpolate from %dx%d to %dx%d" % (orig_size, orig_size, new_size, new_size))
+        extra_tokens = old_pos_embed[:, :num_extra_tokens]
+        # only the position tokens are interpolated
+        pos_tokens = old_pos_embed[:, num_extra_tokens:]
+
+        # Reshape to image grid
+        pos_tokens = pos_tokens.reshape(-1, orig_size, orig_size, embedding_size).permute(0, 3, 1, 2)
+
+        # Interpolate
+        pos_tokens = torch.nn.functional.interpolate(
+            pos_tokens, size=(new_size, new_size), mode='bicubic', align_corners=False)
+
+        # Reshape to (N, D)
+        pos_tokens = pos_tokens.permute(0, 2, 3, 1).flatten(1, 2)
+        new_pos_embed = torch.cat((extra_tokens, pos_tokens), dim=1)
+        return new_pos_embed

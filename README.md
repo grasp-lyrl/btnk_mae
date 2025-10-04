@@ -55,6 +55,17 @@ Then follow the prompt to enter the access token.
 ### Custom dataset
 To use a custom dataset, simply set the `data.dataset` variable in the `configs/config.yaml` to the **absolute path** of the dataset. For any other dataset, modify the `dataset.py` file to include it accordingly.
 
+The current implementation of the custom dataset requires a `dataset_config.json` file in the dataset directory to enforce a controllable dataset loading behavior. You may modify the `btnk_mae/utils/datasets.py` file to remove this requirement. Example of the `dataset_config.json` file:
+```json
+{
+    "dataset_name": "your_dataset_name",
+    "dataset_type": "panorama",
+    "dataset_path": "path/to/your/dataset"
+}
+```
+
+The `dataset_type` can be `panorama` or `custom`. This setting is primarily used to determine if the images in the dataset require special handling (such as resizing to panorama images to 512x512).
+
 ## Training
 ### Train the model
 NOTE: We use the terms *train* and *finetune* with respect to the bottleneck structure added on top of the pretrained MAE. In both cases, we always start by loading the pretrained weights from the original MAE paper. By *training*, we mean loading the parts of the structure that overlap with the original MAE and then training on ImageNet-1k until the bottleneck layers are also trained. By *finetuning*, we mean starting from the trained model and further tuning it to let it “overfit” to a domain specific dataset.

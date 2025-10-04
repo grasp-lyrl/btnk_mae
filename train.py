@@ -25,7 +25,7 @@ from train_engine import train_one_epoch
 
 
 @record
-@hydra.main(config_path="configs", config_name="config", version_base="1.3")
+@hydra.main(config_path="configs", config_name="train", version_base="1.3")
 def main(cfg: DictConfig):
     """
     Main training loop for CLS-MAE.
@@ -42,17 +42,17 @@ def main(cfg: DictConfig):
     cfg.output_dir = f"ckpts/{cfg.run_name}"
     dcfg = cfg.distributed
 
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Initialize distributed mode if needed
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     misc.init_distributed_mode(cfg)
     if cfg.distributed is not None:
         is_valid_rank = dcfg.local_rank >= 0
         dcfg.local_rank = dcfg.local_rank if is_valid_rank else misc.get_rank()
 
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Initialize W&B for the main process and create output_dir
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     assert cfg.run_name is not None, "Run name not set properly, aborted."
     if misc.is_main_process():
         print(f"Initializing W&B with project {cfg.wandb_project} and run name {cfg.run_name}")
@@ -63,17 +63,17 @@ def main(cfg: DictConfig):
         )
         os.makedirs(cfg.output_dir, exist_ok=True)
 
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Fix seed for reproducibility
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     seed = cfg.seed + misc.get_rank()
     torch.manual_seed(seed)
     np.random.seed(seed)
     cudnn.benchmark = True
 
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Create dataset & DataLoader
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     train_dataset = get_dataset(cfg)
 
     if cfg.distributed is not None:
@@ -94,9 +94,9 @@ def main(cfg: DictConfig):
         drop_last=True
     )
 
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Load model and optimizer
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     encoder, decoder = btnk_mae.get_encoder_decoder(cfg)
     if cfg.distributed is not None:
         torch.cuda.set_device(dcfg.local_rank)
@@ -111,9 +111,9 @@ def main(cfg: DictConfig):
     encoder.to(device)
     decoder.to(device)
 
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Create optimizer for the bottleneck only
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # If lr is null in YAML, compute it from blr and batch size
     if cfg.train_cfg.lr is None:
         eff_batch_size = cfg.train_cfg.batch_size * cfg.train_cfg.accum_iter * misc.get_world_size()
@@ -137,6 +137,11 @@ def main(cfg: DictConfig):
         loss_scaler=loss_scaler
     )
 
+    # After (optional) resuming from a checkpoint, set the image size if it is different from the original image size
+    if cfg.model.img_size != encoder.img_size or cfg.model.img_size != decoder.img_size:
+        encoder.set_img_size(cfg.model.img_size)
+        decoder.set_img_size(cfg.model.img_size)
+
     if cfg.distributed is not None:
         encoder = torch.nn.parallel.DistributedDataParallel(
             encoder, device_ids=[dcfg.local_rank], find_unused_parameters=False
@@ -145,9 +150,9 @@ def main(cfg: DictConfig):
             decoder, device_ids=[dcfg.local_rank], find_unused_parameters=False
         )
 
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # Training loop
-    # --------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     for epoch in range(cfg.train_cfg.start_epoch, cfg.train_cfg.epochs):
         if cfg.distributed is not None:
             data_loader_train.sampler.set_epoch(epoch)

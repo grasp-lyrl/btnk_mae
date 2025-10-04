@@ -2,9 +2,7 @@ import os
 import torch
 import torch.nn as nn
 from functools import partial
-from timm.models.vision_transformer import Block
 from btnk_mae.utils.pos_embed import get_2d_sincos_pos_embed
-from btnk_mae.utils.patchify import unpatchify
 from btnk_mae.patch_reconstruct import PatchReconstruction
 from btnk_mae.mae_decoder import MAEDecoder
 
@@ -61,12 +59,6 @@ class BtnkMAEDecoder(nn.Module):
             encoder_dim = self.embed_dim,  # The dimension of the encoder embeddings
             num_heads = self.decoder_num_heads  # Use the same number of heads as the decoder
         )
-        # self.projection = nn.Sequential(
-        #     nn.LayerNorm(self.embed_dim),
-        #     nn.Linear(self.embed_dim, self.decoder_embed_dim),
-        #     nn.GELU(),
-        #     nn.LayerNorm(self.decoder_embed_dim),
-        # )
 
         # Decoder blocks
         self.mae_decoder = MAEDecoder(
@@ -79,6 +71,52 @@ class BtnkMAEDecoder(nn.Module):
 
         # Weight initialization
         self.initialize_weights()
+
+    def set_img_size(self, img_size: int):
+        """
+        Set the image size for the decoder.
+        """
+        if img_size == self.img_size:
+            return
+
+        assert isinstance(img_size, int), "Image size must be an integer"
+        assert img_size % self.patch_size == 0, "Image size must be divisible by patch size"
+
+        # Record the original settings
+        device, dtype = self.pos_embed.device, self.pos_embed.dtype
+        requires_grad = self.pos_embed.requires_grad
+
+        # Update image size
+        self.img_size = img_size
+        self.mae_decoder.img_size = img_size
+        new_num_patches = self.num_patches
+
+        # Update learned embeddings
+        self.learned_embed = nn.Parameter(
+            torch.randn(1, new_num_patches, self.embed_dim).to(device=device, dtype=dtype)
+        )
+
+        # Initialize new positional embeddings with sin-cos
+        pos_embed = get_2d_sincos_pos_embed(
+            embed_dim=self.embed_dim,
+            grid_size=int(new_num_patches**0.5),
+            cls_token=False
+        )
+        self.pos_embed = nn.Parameter(
+            torch.from_numpy(pos_embed).float().unsqueeze(0).to(device=device, dtype=dtype),
+            requires_grad=requires_grad
+        )
+        
+        # Update MAE decoder's positional embeddings
+        decoder_pos_embed = get_2d_sincos_pos_embed(
+            embed_dim=self.mae_decoder.decoder_pos_embed.shape[-1],
+            grid_size=int(new_num_patches**0.5),
+            cls_token=True
+        )
+        self.mae_decoder.decoder_pos_embed = nn.Parameter(
+            torch.from_numpy(decoder_pos_embed).float().unsqueeze(0).to(device=device, dtype=dtype),
+            requires_grad=False
+        )
 
     def load_pretrained(self):
         """
@@ -166,7 +204,6 @@ class BtnkMAEDecoder(nn.Module):
         # img = unpatchify(x, self.patch_size)
 
         return x
-
 
     def full_mae_forward(self, x):
         """

@@ -1,4 +1,4 @@
-# configs/config.yaml
+# configs/train.yaml
 defaults:
   - _self_
   - override hydra/job_logging: disabled

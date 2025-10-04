@@ -1,7 +1,4 @@
-import torch
 import torch.nn as nn
-
-from functools import partial
 from timm.models.vision_transformer import PatchEmbed, Block
 
 
@@ -35,7 +32,7 @@ class MAEEncoder(nn.Module):
     @property
     def num_patches(self):
         return self.patch_embed.num_patches
-    
+
     def initialize_weights(self, module=None):
         """
         Initialize learnable parameters
