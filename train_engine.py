@@ -96,7 +96,7 @@ def train_one_epoch(
                 'train/mse_loss': loss,
             }, step=global_step)
 
-            if global_step % 2000 == 0:
+            if global_step % 100 == 0:
                 with torch.no_grad():
                     # pick one sample from this local batch (arbitrary)
                     idx = (data_iter_step * samples.shape[0]) % samples.shape[0]

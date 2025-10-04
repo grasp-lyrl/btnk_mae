@@ -1,9 +1,10 @@
-# Decodable Vision Encoder with Compact Image Representations
+# Bottleneck MAE: A Vision Encoder Mapping Images to 1024-Dimensional Reconstructable Features
+
 Vision foundation models such as [Masked Autoencoders (MAE)](https://arxiv.org/abs/2111.06377), DINO series ([DINO](https://arxiv.org/abs/2104.14294), [DINOv2](https://arxiv.org/abs/2304.07193), [DINOv3](https://arxiv.org/abs/2508.10104)) aim to extract generalizable image features that can be used for a wide range of downstream tasks.
 
 Some downstream models also work in the image feature space, for example a world model that rolls out directly in image features. In those cases, it is useful to reconstruct the rollout sequence back to pixel space for visualization. Many world model tasks also bring in a temporal dimension since they predict the next frame in a sequence. In this setting, raw ViT outputs are a bit awkward because they have shape $B \times L \times D$, where $L$ is the number of patches. Stacking an extra time dimension on top of that makes the representation heavy and difficult to work with.
 
-To solve this, we fine tune a pretrained MAE adapted from [here](https://github.com/facebookresearch/mae) so that it uses its CLS token as a compact representation of the image. This way, for downstream world model tasks, a sequence of images has shape $B \times T \times D$, where $T$ is the number of frames and $D$ is the feature dimension, while still allowing simultaneous decoding back to pixels.
+To solve this, we fine tune a pretrained MAE adapted from [the official implementation](https://github.com/facebookresearch/mae) so that it uses its CLS token as a compact representation of the image. This way, for downstream world model tasks, a sequence of images has shape $B \times T \times D$, where $T$ is the number of frames and $D$ is the feature dimension, while still allowing simultaneous decoding back to pixels.
 
 ## Related Works
 This project was originally developed in [REMI](https://arxiv.org/abs/2507.02064). The paper developed an ANN model of the rat brain during spatial navigation tasks. The goal is to visualize how the model virtually explores the environment during planning. 
@@ -11,30 +12,22 @@ This project was originally developed in [REMI](https://arxiv.org/abs/2507.02064
 In neuroscience setting, the paper is about a system-level computational model of hippocampal and entorhinal cortex cells of how they build spatial maps. In the machine learning setting, it presented a brain inspired world model similar to [Dreamer](https://arxiv.org/abs/2301.04104), using a bottleneck MAE to extract image features and visualize imagined navigation during planning.
 
 ## Environment
-### Basics
-We use venv to manage the environment.
-Install Python 3.11 if not already installed.
+### Clone the repository
 ```bash
-sudo apt update
-sudo apt install python3.11 python3.11-venv
+git clone https://github.com/grasp-lyrl/btnk_mae.git
+cd btnk_mae
 ```
+
+### Install the dependencies
 ```bash
-cd <project_root>
 python3.11 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
+
 ### Install PyTorch
 We recommend installing PyTorch with their [official instructions](https://pytorch.org/get-started/locally/), as the RTX 50 series is currently supported only by the nightly builds.
-
-## Quick Start
-The pretrained models are available for download from [HuggingFace](https://huggingface.co/zhaozewang56). You may first need to clone this repository, and install it via `pip install -e .`:
-```bash
-git clone https://github.com/grasp-lyrl/btnk_mae.git
-cd btnk_mae
-pip install -e .
-```
 
 ## Datasets
 ### Tiny ImageNet
@@ -74,20 +67,20 @@ export HYDRA_FULL_ERROR=1
 #### Single GPU
 If the run name is not provided, it will set to an auto-generate datetime string.
 ```bash
-CUDA_VISIBLE_DEVICES=<GPU_IDS> python train.py train_cfg=<train/finetune> run_name=<RUN_NAME> [any Hydra overrides…]
+CUDA_VISIBLE_DEVICES=<GPU_IDS> python train.py --config-name=<train/finetune> run_name=<RUN_NAME> [any Hydra overrides…]
 ```
 Example:
 ```bash
-CUDA_VISIBLE_DEVICES=0 python train.py train_cfg=train run_name=btnk_mae
+CUDA_VISIBLE_DEVICES=0 python train.py --config-name=train run_name=btnk_mae
 ```
 #### Multi GPU
 Two GPUs with DDP
 ```bash
-torchrun --nproc_per_node=<NUM_GPUS> train.py train_cfg=<train/finetune> run_name=<RUN_NAME> [any Hydra overrides…]
+torchrun --nproc_per_node=<NUM_GPUS> train.py --config-name=<train/finetune> run_name=<RUN_NAME> [any Hydra overrides…]
 ```
 Example:
 ```bash
-torchrun --nproc_per_node=8 train.py train_cfg=train run_name=base
+torchrun --nproc_per_node=8 train.py --config-name=train
 ```
 
 #### Overwrite config with hydra

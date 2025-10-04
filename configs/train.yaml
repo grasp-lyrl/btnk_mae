@@ -1,0 +1,66 @@
+# configs/config.yaml
+defaults:
+  - _self_
+  - override hydra/job_logging: disabled
+  - override hydra/hydra_logging: disabled
+
+
+# Training settings
+train_cfg:
+  # Resume from a checkpoint
+  resume: "ckpts/large_gan/checkpoint-latest.pth"  # If not set will not resume from a checkpoint.
+  resume_optimizer: false  # Recommend to use a new optimizer if you are loading a checkpoint saved during training mode.
+
+  # Training settings
+  epochs: 50
+  warmup_epochs: 10
+  accum_iter: 4
+  batch_size: 64
+  num_workers: 10
+  pin_mem: false
+  weight_decay: 0.05
+  lr: null  # will be computed automatically if not set
+  blr: 1e-4  # base learning rate
+  min_lr: 0.0  # minimum learning rate
+  start_epoch: 0  # start epoch
+
+  # Loss coefficients
+  full_mae_loss_coeff: 1
+  btnk_mae_loss_coeff: 1
+
+
+# W&B settings
+wandb_project:    btnk_mae
+run_name:         null  # If not set will fallback to YYYYMMDD_HHMMSS string.
+
+# Prevents hydra from creating a subdirectory to save the config.
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+  job:
+    chdir: false
+
+# Data settings:
+data:
+  dataset:     imagenet-1k
+  pin_mem:     false
+
+# model settings:
+model:
+  type: btnk_mae
+  model_size: large_gan
+  act_fn: relu
+  img_size: 224
+
+# Distributed settings:
+distributed:
+  dist_on_itp: false
+  dist_url: "env://"
+  world_size: 1
+  local_rank: -1
+  gpu: 0
+  rank: 0
+
+# GLOBAL DEFAULTS
+seed:   0
