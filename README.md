@@ -7,9 +7,55 @@ Some downstream models also work in the image feature space, for example a world
 To solve this, we fine tune a pretrained MAE adapted from [the official implementation](https://github.com/facebookresearch/mae) so that it uses its CLS token as a compact representation of the image. This way, for downstream world model tasks, a sequence of images has shape $B \times T \times D$, where $T$ is the number of frames and $D$ is the feature dimension, while still allowing simultaneous decoding back to pixels.
 
 ## Related Works
-This project was originally developed in [REMI](https://arxiv.org/abs/2507.02064). The paper developed an ANN model of the rat brain during spatial navigation tasks. The goal is to visualize how the model virtually explores the environment during planning. 
+This project was originally developed in [REMI](https://arxiv.org/abs/2507.02064). The paper developed an ANN model of the rat brain during spatial navigation tasks. The goal is to visualize how the model virt·ually explores the environment during planning. 
 
 In neuroscience setting, the paper is about a system-level computational model of hippocampal and entorhinal cortex cells of how they build spatial maps. In the machine learning setting, it presented a brain inspired world model similar to [Dreamer](https://arxiv.org/abs/2301.04104), using a bottleneck MAE to extract image features and visualize imagined navigation during planning.
+
+## Example
+See `examples/demo.ipynb` for an example of how to use the BtnkMAE model.
+### Compress and reconstruct results
+<table style="border-collapse: collapse; border: none; width: 100%;">
+  <tr>
+    <td><img src="assets/224x224/img_0.png" width="100%"></td>
+    <td><img src="assets/224x224/img_0_rec.png" width="100%"></td>
+    <td><img src="assets/224x224/img_1.png" width="100%"></td>
+    <td><img src="assets/224x224/img_1_rec.png" width="100%"></td>
+    <td><img src="assets/224x224/img_2.png" width="100%"></td>
+    <td><img src="assets/224x224/img_2_rec.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/224x224/img_3.png" width="100%"></td>
+    <td><img src="assets/224x224/img_3_rec.png" width="100%"></td>
+    <td><img src="assets/224x224/img_4.png" width="100%"></td>
+    <td><img src="assets/224x224/img_4_rec.png" width="100%"></td>
+    <td><img src="assets/224x224/img_5.png" width="100%"></td>
+    <td><img src="assets/224x224/img_5_rec.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/224x224/img_6.png" width="100%"></td>
+    <td><img src="assets/224x224/img_6_rec.png" width="100%"></td>
+    <td><img src="assets/224x224/img_7.png" width="100%"></td>
+    <td><img src="assets/224x224/img_7_rec.png" width="100%"></td>
+    <td><img src="assets/224x224/img_8.png" width="100%"></td>
+    <td><img src="assets/224x224/img_8_rec.png" width="100%"></td>
+  </tr>
+</table>
+
+### Processing Panorama Images
+<table style="border-collapse: collapse; border: none; width: 80%; margin: 0 auto;">
+  <tr>
+    <td><img src="assets/1024x512/img_0.png" width="100%"></td>
+    <td><img src="assets/1024x512/img_0_rec.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/1024x512/img_1.png" width="100%"></td>
+    <td><img src="assets/1024x512/img_1_rec.png" width="100%"></td>
+  </tr>
+  <tr>
+    <td><img src="assets/1024x512/img_2.png" width="100%"></td>
+    <td><img src="assets/1024x512/img_2_rec.png" width="100%"></td>
+  </tr>
+</table>
 
 ## Environment
 ### Clone the repository
