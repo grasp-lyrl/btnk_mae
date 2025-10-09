@@ -1,19 +1,24 @@
-# Bottleneck MAE: A Vision Encoder Mapping Images to 1024-Dimensional Reconstructable Features
+# Bottleneck MAE: $\ \text{Image} \rightarrow \mathbb{R}^{1024} \rightarrow \hat{\text{Image}}$
 
 Vision foundation models such as [Masked Autoencoders (MAE)](https://arxiv.org/abs/2111.06377), DINO series ([DINO](https://arxiv.org/abs/2104.14294), [DINOv2](https://arxiv.org/abs/2304.07193), [DINOv3](https://arxiv.org/abs/2508.10104)) aim to extract generalizable image features that can be used for a wide range of downstream tasks.
 
-Some downstream models also work in the image feature space, for example a world model that rolls out directly in image features. In those cases, it is useful to reconstruct the rollout sequence back to pixel space for visualization. Many world model tasks also bring in a temporal dimension since they predict the next frame in a sequence. In this setting, raw ViT outputs are a bit awkward because they have shape $B \times L \times D$, where $L$ is the number of patches. Stacking an extra time dimension on top of that makes the representation heavy and difficult to work with.
+However, ViT based models produce large feature tensors of shape $B \times N \times D$, where $N$ is the number of patches and $D$ the feature dimension. For tasks with a temporal dimension, sequences of images would have shape $B \times T \times N \times D$, making the latent space too large to compute efficiently.
 
-To solve this, we fine tune a pretrained MAE adapted from [the official implementation](https://github.com/facebookresearch/mae) so that it uses its CLS token as a compact representation of the image. This way, for downstream world model tasks, a sequence of images has shape $B \times T \times D$, where $T$ is the number of frames and $D$ is the feature dimension, while still allowing simultaneous decoding back to pixels.
+In addition, DINO models lack a decoder head to reconstruct images from features. For tasks that generate new features (e.g., world models rollout in image features), it may be useful to decode them back to image space for visualization, but the DINO series does not support this.
+
+<!-- 
+Some downstream models also work in the image feature space, for example a world model that rolls out directly in image features. In those cases, it is useful to reconstruct the rollout sequence back to pixel space for visualization. Many world model tasks also bring in a temporal dimension since they predict the next frame in a sequence. In this setting, raw ViT outputs are a bit awkward because they have shape $B \times L \times D$, where $L$ is the number of patches. Stacking an extra time dimension on top of that makes the representation heavy and difficult to work with. -->
+
+Thus, we finetune a pretrained MAE adapted from [the official implementation](https://github.com/facebookresearch/mae). We add a bottleneck layer after the encoder and use a DETR-style reconstruction layer so that the encoder maps each image to a 1024-dimensional feature vector, while the decoder reconstructs the original image.
 
 ## Related Works
-This project was originally developed in [REMI](https://arxiv.org/abs/2507.02064). The paper developed an ANN model of the rat brain during spatial navigation tasks. The goal is to visualize how the model virt·ually explores the environment during planning. 
+This project was originally developed in [REMI](https://arxiv.org/abs/2507.02064). The paper developed an ANN model of the rat brain during spatial navigation tasks. The goal is to visualize how the model virtually explores the environment during planning. 
 
-In neuroscience setting, the paper is about a system-level computational model of hippocampal and entorhinal cortex cells of how they build spatial maps. In the machine learning setting, it presented a brain inspired world model similar to [Dreamer](https://arxiv.org/abs/2301.04104), using a bottleneck MAE to extract image features and visualize imagined navigation during planning.
+In neuroscience setting, the paper is about a system-level computational model of hippocampal and entorhinal cortex cells of how they build spatial maps. In the machine learning setting, it presented a brain-inspired world model similar to [Dreamer](https://arxiv.org/abs/2301.04104), using a bottleneck MAE to extract image features and visualize imagined navigation during planning.
 
 ## Example
 See `examples/demo.ipynb` for an example of how to use the BtnkMAE model.
-### Compress and reconstruct results
+### Compress and reconstruct images from ImageNet-1k (224x224)
 <table style="border-collapse: collapse; border: none; width: 100%;">
   <tr>
     <td><img src="assets/224x224/img_0.png" width="100%"></td>
@@ -42,6 +47,9 @@ See `examples/demo.ipynb` for an example of how to use the BtnkMAE model.
 </table>
 
 ### Processing Panorama Images
+The model can also handle images of varying sizes. For instance, to process images of size 1024×512, we first resize them to 512×512. We then fine-tune the model pretraiend on 224×224 images on the 512x512 images by recomputing the cos-sin positional embeddings.
+
+The following results are obtained by fine-tuning the model on panorama images of a single scene in [Habitat-Sim](https://github.com/facebookresearch/habitat-sim)as part of the [REMI](https://arxiv.org/abs/2507.02064) paper, where the bottleneck MAE was originally developed for.
 <table style="border-collapse: collapse; border: none; width: 80%; margin: 0 auto;">
   <tr>
     <td><img src="assets/1024x512/img_0.png" width="100%"></td>
