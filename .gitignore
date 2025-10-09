@@ -4,6 +4,7 @@
 logs/
 extracted_features/
 notes.md
+run_habitat.py
 
 # Project specific
 ckpts/

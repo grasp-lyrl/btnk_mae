@@ -9,13 +9,14 @@ defaults:
 train_cfg:
   # Resume from a checkpoint
   resume: "ckpts/large_gan/checkpoint-latest.pth"  # If not set will not resume from a checkpoint.
-  resume_optimizer: true  # Recommend to use a new optimizer if you are loading a checkpoint saved during training mode.
-  
+  resume_optimizer: false  # Recommend to use a new optimizer if you are loading a checkpoint saved during training mode.
+  resume_img_size: 512
+
   # Training settings
   epochs: 300
   warmup_epochs: 30
-  accum_iter: 1
-  batch_size: 16
+  accum_iter: 16
+  batch_size: 12
   num_workers: 10
   pin_mem: false
   weight_decay: 0.05

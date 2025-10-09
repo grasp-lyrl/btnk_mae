@@ -107,6 +107,15 @@ def main(cfg: DictConfig):
         print(f"[Rank {rank}] using device {device_id} ({device_name})", flush=True)
     else:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    # If the resume image size is the same as target model image size, set the image size
+    # before loading the checkpoint
+    if cfg.train_cfg.resume_img_size == cfg.model.img_size:
+        # This will interpolate the position embeddings, but since position embeddings at this
+        # step are randomly initialized, it doesn't matter as its value will be overwritten
+        # at the loading step
+        encoder.set_image_size(cfg.train_cfg.resume_img_size)
+        decoder.set_image_size(cfg.train_cfg.resume_img_size)
 
     encoder.to(device)
     decoder.to(device)
@@ -137,7 +146,8 @@ def main(cfg: DictConfig):
         loss_scaler=loss_scaler
     )
 
-    # After (optional) resuming from a checkpoint, set the image size if it is different from the original image size
+    # If the target image size is different from the original image size. That is, at previous
+    # initialization step, the image size is not set, interpolate the position embeddings
     if cfg.model.img_size != encoder.img_size or cfg.model.img_size != decoder.img_size:
         encoder.set_img_size(cfg.model.img_size)
         decoder.set_img_size(cfg.model.img_size)

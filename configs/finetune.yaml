@@ -10,7 +10,7 @@ train_cfg:
   # Resume from a checkpoint
   resume: "ckpts/tune_upscaler_encdec/checkpoint-latest.pth"  # If not set will not resume from a checkpoint.
   resume_optimizer: true  # Recommend to use a new optimizer if you are loading a checkpoint saved during training mode.
-  
+
   # Training settings
   epochs: 300
   warmup_epochs: 30
@@ -30,8 +30,8 @@ train_cfg:
 
 
 # W&B settings
-wandb_project:    btnk_mae
-run_name:         null  # If not set will fallback to YYYYMMDD_HHMMSS string.
+wandb_project: btnk_mae
+run_name: null  # If not set will fallback to YYYYMMDD_HHMMSS string.
 
 # Prevents hydra from creating a subdirectory to save the config.
 hydra:
@@ -43,8 +43,8 @@ hydra:
 
 # Data settings:
 data:
-  dataset:     imagenet-1k
-  pin_mem:     false
+  dataset: imagenet-1k
+  pin_mem: false
 
 # model settings:
 model:

@@ -67,7 +67,6 @@ def train_one_epoch(
         loss_value = loss.item()
         if not math.isfinite(loss_value):
             if misc.is_main_process():
-
                 wandb.log({"error": f"Loss is {loss_value}, stopping training."})
             sys.exit(1)
 

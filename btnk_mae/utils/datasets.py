@@ -63,22 +63,18 @@ class PanoramaDataset(CustomDataset):
         super().__init__(dataset_path, transform=self.transform)
 
     def __getitem__(self, idx):
-        max_attempts = 10  # avoid infinite loop on many bad files
-        attempts = 0
-        while attempts < max_attempts and idx < len(self.image_paths):
-            path = self.image_paths[idx]
-            try:
-                image = PIL.Image.open(path).convert("RGB")
-                image = image.resize((512, 512), PIL.Image.BICUBIC)
-                if self.transform:
-                    image = self.transform(image)
-                return image, -1
-            except Exception as e:
-                print(f"Warning: Skipping corrupt image {path} — {e}")
-                idx += 1
-                attempts += 1
-
-        raise RuntimeError(f"Failed to load a valid image after {max_attempts} attempts starting from index {idx}")
+        path = self.image_paths[idx]
+        try:
+            image = PIL.Image.open(path).convert("RGB")
+            image = image.resize((512, 512), PIL.Image.BICUBIC)
+            if self.transform:
+                image = self.transform(image)
+            return image, -1
+        except Exception as e:
+            print(f"Warning: Failed to load image {path} — {e}")
+            # Return a blank/zero image to maintain batch structure
+            blank_image = self.transform(PIL.Image.new('RGB', (512, 512), (0, 0, 0)))
+            return blank_image, -1
 
 
 class HFTransformDataset(torch.utils.data.Dataset):
