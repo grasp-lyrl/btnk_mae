@@ -178,7 +178,7 @@ export WANDB_MODE=online    # Enable wandb
 If you found this project useful, please cite the paper:
 ```bibtex 
 @inproceedings{WangREMI2025,
-   title = {REMI: REconstructing Memory During Intrinsic Path Planning},
+   title = {REMI: Reconstructing Episodic Memory During Internally Driven Path Planning},
    author = {Wang, Zhaoze and Morris, Genela and Derdikman, Dori and Chaudhari, Pratik and Balasubramanian, Vijay},
    booktitle = {Advances in Neural Information Processing Systems (NeurIPS)},
    year = {2025},
