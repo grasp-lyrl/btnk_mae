@@ -345,7 +345,7 @@ def save_enc_dec_model(cfg, epoch, enc_without_ddp, dec_without_ddp, optimizer, 
     }
 
     checkpoint_paths = []
-    if epoch % 10 == 0:
+    if epoch % 20 == 0:
         checkpoint_path = output_dir / ('checkpoint-%s.pth' % epoch_name)
         torch.save(to_save, checkpoint_path)
         checkpoint_paths.append(checkpoint_path)
