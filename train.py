@@ -114,8 +114,8 @@ def main(cfg: DictConfig):
         # This will interpolate the position embeddings, but since position embeddings at this
         # step are randomly initialized, it doesn't matter as its value will be overwritten
         # at the loading step
-        encoder.set_image_size(cfg.train_cfg.resume_img_size)
-        decoder.set_image_size(cfg.train_cfg.resume_img_size)
+        encoder.set_img_size(cfg.train_cfg.resume_img_size)
+        decoder.set_img_size(cfg.train_cfg.resume_img_size)
 
     encoder.to(device)
     decoder.to(device)
